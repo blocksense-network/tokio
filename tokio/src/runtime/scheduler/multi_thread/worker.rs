@@ -475,7 +475,7 @@ where
         // Once the blocking task is done executing, we will attempt to
         // steal the core back.
         let worker = cx.worker.clone();
-        runtime::spawn_blocking(move || run(worker));
+        runtime::spawn_blocking_scheduler_worker(move || run(worker));
         Ok(())
     });
 

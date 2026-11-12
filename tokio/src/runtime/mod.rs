@@ -560,6 +560,8 @@ cfg_rt! {
     mod blocking;
     #[cfg_attr(target_os = "wasi", allow(unused_imports))]
     pub(crate) use blocking::spawn_blocking;
+    #[cfg_attr(not(feature = "rt-multi-thread"), allow(unused_imports))]
+    pub(crate) use blocking::spawn_blocking_scheduler_worker;
 
     cfg_trace! {
         pub(crate) use blocking::Mandatory;

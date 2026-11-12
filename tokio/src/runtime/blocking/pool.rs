@@ -188,6 +188,31 @@ where
     rt.spawn_blocking(func)
 }
 
+/// Runs the multi-thread scheduler worker whose core `block_in_place` hands
+/// off on a thread of the blocking pool. Unlike [`spawn_blocking`], a thread
+/// that cannot be started is not fatal. The worker stays queued and runs
+/// once a blocking thread is free, as it did before tokio-rs/tokio#8408. That
+/// change, backported here, made this spawn panic when the pool has no
+/// blocking thread; under lasting process pressure that would abort the
+/// process from any `block_in_place` call.
+#[cfg_attr(
+    any(target_os = "wasi", not(feature = "rt-multi-thread")),
+    allow(dead_code)
+)]
+pub(crate) fn spawn_blocking_scheduler_worker<F>(func: F)
+where
+    F: FnOnce() + Send + 'static,
+{
+    let rt = Handle::current();
+    // `NoThreads` and `ShuttingDown` both leave the worker queued.
+    let (_join_handle, _queued_either_way) = rt.inner.blocking_spawner().spawn_blocking_inner(
+        func,
+        Mandatory::NonMandatory,
+        SpawnMeta::new_unnamed(std::mem::size_of::<F>()),
+        &rt,
+    );
+}
+
 cfg_fs! {
     #[cfg_attr(any(
         all(loom, not(test)), // the function is covered by loom tests

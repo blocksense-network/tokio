@@ -4,6 +4,8 @@
 //! compilation.
 
 mod pool;
+#[cfg_attr(not(feature = "rt-multi-thread"), allow(unused_imports))]
+pub(crate) use pool::spawn_blocking_scheduler_worker;
 pub(crate) use pool::{spawn_blocking, BlockingPool, Spawner};
 
 cfg_fs! {
